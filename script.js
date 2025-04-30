@@ -27,7 +27,7 @@ const account3 = {
 };
 
 const account4 = {
-  owner: 'Adhrit Chauhan',
+  owner: 'Adhrit Singh Chauhan',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -61,9 +61,10 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+const loginForm = document.querySelector('.login');
+
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-// LECTURES
 
 const currencies = new Map([
   ['USD', 'United States dollar'],
@@ -71,32 +72,7 @@ const currencies = new Map([
   ['GBP', 'Pound sterling'],
 ]);
 
-const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
-
 /////////////////////////////////////////////////
-containerApp.style.opacity = '1';
-const displayMovements = function (movements) {
-  containerMovements.innerHTML = '';
-  movements.forEach((mov, i) => {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
-    const html = `<div class="movements__row">
-          <div class="movements__type movements__type--${type}">${
-      i + 1
-    } ${type}</div>
-          <div class="movements__date">3 days ago</div>
-          <div class="movements__value">Rs.${mov}</div>
-        </div>`;
-    containerMovements.insertAdjacentHTML('afterbegin', html);
-  });
-};
-displayMovements(movements);
-
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc, cur) => acc + cur, 0);
-  labelBalance.textContent = `Rs.${balance}`;
-};
-calcDisplayBalance(movements);
-
 const computingUserName = function (accounts) {
   accounts.forEach(acc => {
     acc.userName = acc.owner
@@ -108,21 +84,113 @@ const computingUserName = function (accounts) {
 };
 computingUserName(accounts);
 
-const calcDisplaySummary = function (movements) {
-  const deposit = movements
-    .filter(mov => mov > 0)
-    .reduce((acc, cur) => acc + cur);
-  const withdrawal = movements
-    .filter(mov => mov < 0)
-    .reduce((acc, cur) => acc + cur);
-  const interest = movements
-    .filter(mov => mov > 0)
-    .map(mov => mov * (1.2 / 100))
-    .filter(mov => mov >= 1)
-    .reduce((acc, cur) => acc + cur);
-  console.log(deposit, withdrawal, interest);
-  labelSumIn.textContent = `Rs.${deposit}`;
-  labelSumOut.textContent = `Rs.${withdrawal}`;
+const displayMovements = function (acc) {
+  containerMovements.innerHTML = '';
+  acc.movements.forEach((mov, i) => {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+    const html = `<div class="movements__row">
+          <div class="movements__type movements__type--${type}">${
+      i + 1
+    } ${type}</div>
+          <div class="movements__date">3 days ago</div>
+          <div class="movements__value">Rs.${mov}</div>
+        </div>`;
+    containerMovements.insertAdjacentHTML('afterbegin', html);
+  });
 };
 
-calcDisplaySummary(movements);
+const calcDisplayBalance = function (acc) {
+  acc.balance = acc?.movements.reduce((acc, cur) => acc + cur, 0);
+  labelBalance.textContent = `Rs.${acc?.balance}`;
+};
+
+const calcDisplaySummary = function (acc) {
+  const deposit = acc?.movements
+    .filter(mov => mov > 0)
+    .reduce((acc, cur) => acc + cur, 0);
+  labelSumIn.textContent = `Rs.${deposit}`;
+
+  const withdrawal = acc?.movements
+    .filter(mov => mov < 0)
+    ?.reduce((acc, cur) => acc + cur, 0);
+  labelSumOut.textContent = `Rs.${withdrawal}`;
+
+  const interest = acc?.movements
+    .filter(mov => mov > 0)
+    .map(mov => mov * (acc.interestRate / 100))
+    .filter(mov => mov >= 1)
+    .reduce((acc, cur) => acc + cur, 0);
+  labelSumInterest.textContent = `Rs.${interest}`;
+};
+const updateUI = function (account) {
+  displayMovements(account);
+  calcDisplayBalance(account);
+  calcDisplaySummary(account);
+};
+
+let currUser;
+const loginUser = function (e) {
+  e.preventDefault();
+  const inputUser = inputLoginUsername.value;
+  const inputPIN = +inputLoginPin.value;
+  if (!inputUser || !inputPIN) return;
+  currUser = accounts.find(
+    acc => acc?.pin === inputPIN && acc?.userName === inputUser
+  );
+  // Displaying the Welcome message
+  labelWelcome.textContent = `Welcome back ${currUser?.owner}`;
+
+  //Displaying UI
+  containerApp.style.opacity = '1';
+  updateUI(currUser);
+
+  inputLoginPin.value = inputLoginUsername.value = '';
+  inputLoginPin.blur();
+};
+
+// Implementing the transfer money logic
+const transferMoney = function (e) {
+  const amount = +inputTransferAmount.value;
+  const recipent = accounts.find(acc => acc.userName === inputTransferTo.value);
+  e.preventDefault();
+  if (
+    amount > 0 &&
+    recipent &&
+    inputTransferTo.value !== currUser.userName &&
+    amount <= currUser.balance
+  ) {
+    // Adding negative amount to the currUser
+    currUser.movements.push(-+inputTransferAmount.value);
+
+    // updaing UI
+    updateUI(currUser);
+
+    // Adding positive amount to the recipient
+
+    recipent.movements.push(+inputTransferAmount.value);
+
+    inputTransferAmount.value = inputTransferTo.value = '';
+    inputTransferAmount.blur();
+  }
+};
+
+const closeAccount = function (e) {
+  e.preventDefault();
+  if (
+    inputCloseUsername.value === currUser.userName &&
+    +inputClosePin.value === currUser.pin
+  ) {
+    const index = accounts.findIndex(acc => acc.userName === currUser.userName);
+    accounts.splice(index, 1);
+    console.log(accounts);
+    inputClosePin.value = inputCloseUsername.value = '';
+    labelWelcome.textContent = 'Log in to get started';
+    containerApp.style.opacity = 0;
+    currUser = '';
+  }
+};
+// Event handlers
+loginForm.addEventListener('submit', loginUser);
+btnTransfer.addEventListener('click', transferMoney);
+console.log(accounts);
+btnClose.addEventListener('click', closeAccount);
