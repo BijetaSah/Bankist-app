@@ -84,9 +84,12 @@ const computingUserName = function (accounts) {
 };
 computingUserName(accounts);
 
-const displayMovements = function (acc) {
+const displayMovements = function (acc, sorted = false) {
   containerMovements.innerHTML = '';
-  acc.movements.forEach((mov, i) => {
+  const movs = sorted
+    ? acc.movements.slice().sort((a, b) => a - b)
+    : acc.movements;
+  movs.forEach((mov, i) => {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `<div class="movements__row">
           <div class="movements__type movements__type--${type}">${
@@ -138,6 +141,7 @@ const loginUser = function (e) {
     acc => acc?.pin === inputPIN && acc?.userName === inputUser
   );
   // Displaying the Welcome message
+  if (!currUser) return;
   labelWelcome.textContent = `Welcome back ${currUser?.owner}`;
 
   //Displaying UI
@@ -182,15 +186,36 @@ const closeAccount = function (e) {
   ) {
     const index = accounts.findIndex(acc => acc.userName === currUser.userName);
     accounts.splice(index, 1);
-    console.log(accounts);
     inputClosePin.value = inputCloseUsername.value = '';
     labelWelcome.textContent = 'Log in to get started';
     containerApp.style.opacity = 0;
-    currUser = '';
+    // currUser = '';
   }
+};
+
+const requestLoan = function (e) {
+  e.preventDefault();
+  const check =
+    +inputLoanAmount.value > 0 &&
+    currUser.movements
+      .filter(mov => mov > 0)
+      .some(dep => dep >= +inputLoanAmount.value * 0.1);
+  if (!check) return;
+  currUser.movements.push(requestLoanAmount);
+  updateUI(currUser);
+  inputLoanAmount.value = '';
+};
+
+let sorted = false;
+const sortFunctionality = function (e) {
+  e.preventDefault();
+  displayMovements(currUser, !sorted);
+  sorted = !sorted;
 };
 // Event handlers
 loginForm.addEventListener('submit', loginUser);
 btnTransfer.addEventListener('click', transferMoney);
 console.log(accounts);
 btnClose.addEventListener('click', closeAccount);
+btnLoan.addEventListener('click', requestLoan);
+btnSort.addEventListener('click', sortFunctionality);
