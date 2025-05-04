@@ -10,6 +10,16 @@ const account1 = {
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
+  movementsDates: [
+    '2019-11-18T21:31:17.178Z',
+    '2019-12-23T07:42:02.383Z',
+    '2020-01-28T09:15:04.904Z',
+    '2020-04-01T10:17:24.185Z',
+    '2020-05-08T14:11:59.604Z',
+    '2020-07-26T17:01:17.194Z',
+    '2020-07-28T23:36:17.929Z',
+    '2020-08-01T10:51:36.790Z',
+  ],
 };
 
 const account2 = {
@@ -17,6 +27,16 @@ const account2 = {
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
+  movementsDates: [
+    '2019-11-01T13:15:33.035Z',
+    '2019-11-30T09:48:16.867Z',
+    '2019-12-25T06:04:23.907Z',
+    '2020-01-25T14:18:46.235Z',
+    '2020-02-05T16:33:06.386Z',
+    '2020-04-10T14:43:26.374Z',
+    '2020-06-25T18:49:59.371Z',
+    '2020-07-26T12:01:20.894Z',
+  ],
 };
 
 const account3 = {
@@ -24,6 +44,16 @@ const account3 = {
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
+  movementsDates: [
+    '2019-11-18T21:31:17.178Z',
+    '2019-12-23T07:42:02.383Z',
+    '2020-01-28T09:15:04.904Z',
+    '2020-04-01T10:17:24.185Z',
+    '2020-05-08T14:11:59.604Z',
+    '2020-07-26T17:01:17.194Z',
+    '2020-07-28T23:36:17.929Z',
+    '2020-08-01T10:51:36.790Z',
+  ],
 };
 
 const account4 = {
@@ -31,6 +61,13 @@ const account4 = {
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
+  movementsDates: [
+    '2019-11-01T13:15:33.035Z',
+    '2019-11-30T09:48:16.867Z',
+    '2019-12-25T06:04:23.907Z',
+    '2020-01-25T14:18:46.235Z',
+    '2020-02-05T16:33:06.386Z',
+  ],
 };
 
 const accounts = [account1, account2, account3, account4];
@@ -86,17 +123,25 @@ computingUserName(accounts);
 
 const displayMovements = function (acc, sorted = false) {
   containerMovements.innerHTML = '';
-  const movs = sorted
-    ? acc.movements.slice().sort((a, b) => a - b)
-    : acc.movements;
-  movs.forEach((mov, i) => {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
+  const combinedMovsDates = acc.movements.map((movs, i) => ({
+    movements: movs,
+    movementDate: acc.movementsDates.at(i),
+  }));
+
+  if (sorted) combinedMovsDates.sort((a, b) => a.movements - b.movements);
+  combinedMovsDates.forEach(({ movements, movementDate }, i) => {
+    const type = movements > 0 ? 'deposit' : 'withdrawal';
+    const date = new Date(movementDate);
+    const day = `${date.getDate()}`.padStart(2, 0);
+    const month = `${date.getMonth()}`.padStart(2, 0);
+    const displayDate = `${day}/${month}/${date.getFullYear()}`;
+
     const html = `<div class="movements__row">
           <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
-          <div class="movements__date">3 days ago</div>
-          <div class="movements__value">Rs.${mov}</div>
+          <div class="movements__date">${displayDate}</div>
+          <div class="movements__value">Rs.${movements}</div>
         </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
@@ -105,6 +150,10 @@ const displayMovements = function (acc, sorted = false) {
 const calcDisplayBalance = function (acc) {
   acc.balance = acc?.movements.reduce((acc, cur) => acc + cur, 0);
   labelBalance.textContent = `Rs.${acc?.balance}`;
+  const date = new Date();
+  const day = `${date.getDate()}`.padStart(2, 0);
+  const month = `${date.getMonth() + 1}`.padStart(2, 0);
+  labelDate.textContent = `${day}/${month}/${date.getFullYear()}`;
 };
 
 const calcDisplaySummary = function (acc) {
@@ -131,7 +180,28 @@ const updateUI = function (account) {
   calcDisplaySummary(account);
 };
 
-let currUser;
+const startLogotTimer = function () {
+  let time = 100;
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+    labelTimer.textContent = `${min}:${sec}`;
+
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = `Log in to get started`;
+      containerApp.style.opacity = 0;
+    }
+
+    time--;
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+  return timer;
+};
+
+let currUser, timer;
+
 const loginUser = function (e) {
   e.preventDefault();
   const inputUser = inputLoginUsername.value;
@@ -142,10 +212,13 @@ const loginUser = function (e) {
   );
   // Displaying the Welcome message
   if (!currUser) return;
+
   labelWelcome.textContent = `Welcome back ${currUser?.owner}`;
 
   //Displaying UI
   containerApp.style.opacity = '1';
+  if (timer) clearInterval(timer);
+  timer = startLogotTimer();
   updateUI(currUser);
 
   inputLoginPin.value = inputLoginUsername.value = '';
@@ -165,13 +238,20 @@ const transferMoney = function (e) {
   ) {
     // Adding negative amount to the currUser
     currUser.movements.push(-+inputTransferAmount.value);
-
+    // Adding current date
+    currUser.movementsDates.push(new Date().toISOString());
+    console.log(currUser);
     // updaing UI
     updateUI(currUser);
+    clearInterval(timer);
+    timer = startLogotTimer();
 
     // Adding positive amount to the recipient
-
     recipent.movements.push(+inputTransferAmount.value);
+    // Adding current date
+    recipent.movementsDates.push(new Date().toISOString());
+
+    console.log(recipent);
 
     inputTransferAmount.value = inputTransferTo.value = '';
     inputTransferAmount.blur();
@@ -195,14 +275,21 @@ const closeAccount = function (e) {
 
 const requestLoan = function (e) {
   e.preventDefault();
+  const amount = +inputLoanAmount.value;
   const check =
-    +inputLoanAmount.value > 0 &&
+    amount > 0 &&
     currUser.movements
       .filter(mov => mov > 0)
       .some(dep => dep >= +inputLoanAmount.value * 0.1);
+
   if (!check) return;
-  currUser.movements.push(requestLoanAmount);
-  updateUI(currUser);
+  setTimeout(function () {
+    currUser.movements.push(amount);
+    currUser.movementsDates.push(new Date().toISOString());
+    updateUI(currUser);
+    clearInterval(timer);
+    timer = startLogotTimer();
+  }, 5000);
   inputLoanAmount.value = '';
 };
 
