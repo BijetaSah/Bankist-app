@@ -20,6 +20,8 @@ const account1 = {
     '2020-07-28T23:36:17.929Z',
     '2020-08-01T10:51:36.790Z',
   ],
+  currency: 'INR',
+  locale: 'en-IN',
 };
 
 const account2 = {
@@ -37,6 +39,8 @@ const account2 = {
     '2020-06-25T18:49:59.371Z',
     '2020-07-26T12:01:20.894Z',
   ],
+  currency: 'EUR',
+  locale: 'pt-PT',
 };
 
 const account3 = {
@@ -54,6 +58,8 @@ const account3 = {
     '2020-07-28T23:36:17.929Z',
     '2020-08-01T10:51:36.790Z',
   ],
+  currency: 'JPY',
+  locale: 'ja-JP',
 };
 
 const account4 = {
@@ -68,6 +74,8 @@ const account4 = {
     '2020-01-25T14:18:46.235Z',
     '2020-02-05T16:33:06.386Z',
   ],
+  currency: 'EUR',
+  locale: 'it-IT',
 };
 
 const accounts = [account1, account2, account3, account4];
@@ -103,12 +111,6 @@ const loginForm = document.querySelector('.login');
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
-const currencies = new Map([
-  ['USD', 'United States dollar'],
-  ['EUR', 'Euro'],
-  ['GBP', 'Pound sterling'],
-]);
-
 /////////////////////////////////////////////////
 const computingUserName = function (accounts) {
   accounts.forEach(acc => {
@@ -121,27 +123,48 @@ const computingUserName = function (accounts) {
 };
 computingUserName(accounts);
 
+// creating a function for formating date using Intl API
+const formatMovementsDate = function (date, locale) {
+  const calcDaysPassed = (date1, date2) =>
+    Math.round(Math.abs(date1 - date2) / (1000 * 60 * 60 * 24));
+  const daysPassed = calcDaysPassed(new Date(), date);
+  console.log(new Date(daysPassed));
+  if (daysPassed === 0) return 'Today';
+  if (daysPassed === 1) return 'Yesterday';
+  if (daysPassed <= 7) return `${daysPassed} days ago `;
+
+  return new Intl.DateTimeFormat(locale).format(date);
+};
+
+//  creating a function for formating currency using Intl API
+const formatCur = function (value, locale, currency) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
+};
+
 const displayMovements = function (acc, sorted = false) {
   containerMovements.innerHTML = '';
-  const combinedMovsDates = acc.movements.map((movs, i) => ({
-    movements: movs,
-    movementDate: acc.movementsDates.at(i),
-  }));
 
-  if (sorted) combinedMovsDates.sort((a, b) => a.movements - b.movements);
-  combinedMovsDates.forEach(({ movements, movementDate }, i) => {
-    const type = movements > 0 ? 'deposit' : 'withdrawal';
-    const date = new Date(movementDate);
-    const day = `${date.getDate()}`.padStart(2, 0);
-    const month = `${date.getMonth()}`.padStart(2, 0);
-    const displayDate = `${day}/${month}/${date.getFullYear()}`;
+  const movs = sorted
+    ? acc.movements.slice().sort((a, b) => a - b)
+    : acc.movements;
+
+  movs.forEach((mov, i) => {
+    const type = mov > 0 ? 'deposit' : 'withdrawal';
+
+    const date = new Date(acc.movementsDates[i]);
+    const displayDate = formatMovementsDate(date, acc.locale);
+
+    const formatMov = formatCur(mov, acc.locale, acc.currency);
 
     const html = `<div class="movements__row">
           <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
           <div class="movements__date">${displayDate}</div>
-          <div class="movements__value">Rs.${movements}</div>
+          <div class="movements__value">Rs.${formatMov}</div>
         </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
@@ -150,29 +173,25 @@ const displayMovements = function (acc, sorted = false) {
 const calcDisplayBalance = function (acc) {
   acc.balance = acc?.movements.reduce((acc, cur) => acc + cur, 0);
   labelBalance.textContent = `Rs.${acc?.balance}`;
-  const date = new Date();
-  const day = `${date.getDate()}`.padStart(2, 0);
-  const month = `${date.getMonth() + 1}`.padStart(2, 0);
-  labelDate.textContent = `${day}/${month}/${date.getFullYear()}`;
 };
 
 const calcDisplaySummary = function (acc) {
   const deposit = acc?.movements
     .filter(mov => mov > 0)
     .reduce((acc, cur) => acc + cur, 0);
-  labelSumIn.textContent = `Rs.${deposit}`;
+  labelSumIn.textContent = formatCur(deposit, acc.locale, acc.currency);
 
   const withdrawal = acc?.movements
     .filter(mov => mov < 0)
     ?.reduce((acc, cur) => acc + cur, 0);
-  labelSumOut.textContent = `Rs.${withdrawal}`;
+  labelSumOut.textContent = formatCur(withdrawal, acc.locale, acc.currency);
 
   const interest = acc?.movements
     .filter(mov => mov > 0)
     .map(mov => mov * (acc.interestRate / 100))
     .filter(mov => mov >= 1)
     .reduce((acc, cur) => acc + cur, 0);
-  labelSumInterest.textContent = `Rs.${interest}`;
+  labelSumInterest.textContent = formatCur(interest, acc.locale, acc.currency);
 };
 const updateUI = function (account) {
   displayMovements(account);
@@ -181,7 +200,7 @@ const updateUI = function (account) {
 };
 
 const startLogotTimer = function () {
-  let time = 100;
+  let time = 300;
   const tick = function () {
     const min = String(Math.trunc(time / 60)).padStart(2, 0);
     const sec = String(time % 60).padStart(2, 0);
@@ -210,15 +229,30 @@ const loginUser = function (e) {
   currUser = accounts.find(
     acc => acc?.pin === inputPIN && acc?.userName === inputUser
   );
-  // Displaying the Welcome message
   if (!currUser) return;
-
-  labelWelcome.textContent = `Welcome back ${currUser?.owner}`;
+  // Displaying the Welcome message
+  labelWelcome.textContent = `Welcome back ${currUser?.owner.split(' ')[0]}`;
 
   //Displaying UI
   containerApp.style.opacity = '1';
+
+  // Creating current date and time
+  const now = new Date();
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  };
+  labelDate.textContent = new Intl.DateTimeFormat(
+    currUser.locale,
+    options
+  ).format(now);
+
   if (timer) clearInterval(timer);
   timer = startLogotTimer();
+
   updateUI(currUser);
 
   inputLoginPin.value = inputLoginUsername.value = '';
@@ -238,25 +272,28 @@ const transferMoney = function (e) {
   ) {
     // Adding negative amount to the currUser
     currUser.movements.push(-+inputTransferAmount.value);
-    // Adding current date
-    currUser.movementsDates.push(new Date().toISOString());
-    console.log(currUser);
-    // updaing UI
-    updateUI(currUser);
-    clearInterval(timer);
-    timer = startLogotTimer();
 
     // Adding positive amount to the recipient
     recipent.movements.push(+inputTransferAmount.value);
+
     // Adding current date
+    currUser.movementsDates.push(new Date().toISOString());
     recipent.movementsDates.push(new Date().toISOString());
 
-    console.log(recipent);
+    // updaing UI
+    updateUI(currUser);
+
+    clearInterval(timer);
+    timer = startLogotTimer();
 
     inputTransferAmount.value = inputTransferTo.value = '';
     inputTransferAmount.blur();
   }
 };
+
+////////////////////////////////
+//   CLOSE  ACCOUNT FUNCTOINALITY
+////////////////////////////////
 
 const closeAccount = function (e) {
   e.preventDefault();
@@ -273,6 +310,10 @@ const closeAccount = function (e) {
   }
 };
 
+///////////////////////////////////
+//  FUNCTOINALITY FOR REUESTING LOAN
+////////////////////////////////////
+
 const requestLoan = function (e) {
   e.preventDefault();
   const amount = +inputLoanAmount.value;
@@ -284,6 +325,7 @@ const requestLoan = function (e) {
 
   if (!check) return;
   setTimeout(function () {
+    // Adding new movement and date
     currUser.movements.push(amount);
     currUser.movementsDates.push(new Date().toISOString());
     updateUI(currUser);
