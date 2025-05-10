@@ -295,3 +295,31 @@ h2 {
 .timer {
   font-weight: 600;
 }
+@media (max-width: 75em) {
+  .app {
+    margin: 4rem;
+  }
+  .summary__value {
+    margin-left: -12.4rem;
+  }
+  .summary {
+    grid-column: 1/-1;
+    /* justify-content: center; */
+    margin-top: 2rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn--sort {
+    margin-left: 0;
+  }
+  .logout-timer {
+    margin-bottom: 1.2rem;
+  }
+}
+
+@media (max-width: 59em) {
+  .summary__value {
+    margin-left: -4.4rem;
+  }
+}
