@@ -146,6 +146,7 @@ const formatCur = function (value, locale, currency) {
 
 const displayMovements = function (acc, sorted = false) {
   containerMovements.innerHTML = '';
+  document.querySelector('nav').style.gap = '2rem';
 
   const movs = sorted
     ? acc.movements.slice().sort((a, b) => a - b)
@@ -164,7 +165,7 @@ const displayMovements = function (acc, sorted = false) {
       i + 1
     } ${type}</div>
           <div class="movements__date">${displayDate}</div>
-          <div class="movements__value">Rs.${formatMov}</div>
+          <div class="movements__value">${formatMov}</div>
         </div>`;
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
