@@ -21,6 +21,7 @@ body {
   background-color: #f3f3f3;
   height: 100vh;
   padding: 2rem;
+  position: relative;
 }
 
 nav {
@@ -302,6 +303,70 @@ h2 {
 .timer {
   font-weight: 600;
 }
+
+.pop-up {
+  width: 30%;
+  /* height: 30%; */
+  background-color: #fff;
+  padding: 5.2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  border-radius: 10px;
+}
+.pop-up-text {
+  font-size: 1.8rem;
+  line-height: 1.4;
+  text-align: center;
+}
+.pop-up-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  /* margin-bottom: 2.4rem; */
+  font-size: 2rem;
+}
+.pop-up span {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+.btn-close {
+  border: none;
+  align-self: center;
+  padding: 1.2rem 2.4rem;
+  border-radius: 5px;
+  color: #fff;
+  background-color: orangered;
+  cursor: pointer;
+  font-size: 1.8rem;
+}
+
+.overlay {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  /* filter: blur(1rem); */
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+/* 
+******************************
+MEDIA QUERIES
+******************************
+
+ */
 @media (max-width: 75em) {
   .app {
     margin: 4rem;
@@ -323,13 +388,16 @@ h2 {
   .logout-timer {
     margin-bottom: 1.2rem;
   }
+  .pop-up {
+    padding: 3.6rem;
+  }
+  .pop-up-text {
+    font-size: 1.6rem;
+    line-height: 1.4;
+    text-align: start;
+  }
 }
 
-/* @media (max-width: 59em) {
-  .summary__value {
-    margin-left: -4.4rem;
-  }
-} */
 @media (max-width: 50em) {
   .app {
     grid-template-columns: repeat(4, 1fr);
@@ -358,6 +426,14 @@ h2 {
   .summary__value {
     font-size: 2rem;
     /* margin: 0; */
+  }
+  .pop-up {
+    padding: 3.2rem;
+    width: 60%;
+  }
+  .btn-close {
+    font-size: 1.6rem;
+    padding: 0.8rem 1.6rem;
   }
 }
 @media (max-width: 40em) {

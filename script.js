@@ -108,10 +108,31 @@ const inputClosePin = document.querySelector('.form__input--pin');
 
 const loginForm = document.querySelector('.login');
 
+const popUp = document.querySelector('.pop-up');
+const btnClosePopup = document.querySelector('.btn-close');
+const overLay = document.querySelector('.overlay');
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
 /////////////////////////////////////////////////
+
+setTimeout(function () {
+  popUp.classList.remove('hidden');
+  overLay.classList.remove('hidden');
+}, 3000);
+
+btnClosePopup.addEventListener('click', () => {
+  popUp.classList.add('hidden');
+  overLay.classList.add('hidden');
+});
+
+window.addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') {
+    popUp.classList.add('hidden');
+    overLay.classList.add('hidden');
+  }
+});
+
 const computingUserName = function (accounts) {
   accounts.forEach(acc => {
     acc.userName = acc.owner

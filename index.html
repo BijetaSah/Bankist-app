@@ -13,6 +13,7 @@
 
     <link rel="stylesheet" href="style.css" />
     <title>Bankist</title>
+    <script defer src="script.js"></script>
   </head>
   <body>
     <!-- TOP NAVIGATION -->
@@ -128,7 +129,20 @@
     <!-- <footer>
       &copy; by Jonas Schmedtmann. Don't claim as your own :)
     </footer> -->
+    <div class="pop-up hidden">
+      <p class="pop-up-text">
+        To login use the given user name and pin. You can see the console to get
+        the data about different accounts
+      </p>
+      <div class="pop-up-box">
+        <span class="">bs , 1111</span>
+        <span>dd , 2222</span>
+        <span>pm , 3333</span>
+        <span>asc , 4444</span>
+      </div>
 
-    <script src="script.js"></script>
+      <button class="btn-close">Close</button>
+    </div>
+    <div class="overlay hidden"></div>
   </body>
 </html>
